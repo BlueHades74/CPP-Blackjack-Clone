@@ -1,0 +1,167 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+struct Card{
+    int value;
+    char cardLetter;
+};
+
+class Deck{
+    
+    vector<Card> cards;
+    
+    public:
+    
+        Deck(bool isDiscardDeck){
+            if (!isDiscardDeck){
+                // constructor to instantly make the cards
+                CreateDeck();
+            }
+        }
+        
+        void CreateDeck(){
+            // loop for the suits
+            for (int i = 0; i < 4; i++){
+                // loop for each card type
+                for (int j = 1; j <= 13; j++){
+                    // create the card
+                    Card card;
+                    // give the card values based on point in loop
+                    switch (j){
+                        case 1:
+                            card.cardLetter = 'A';
+                            card.value = 11;
+                            cards.push_back(card);
+                            break;
+                        case 2:
+                            card.cardLetter = '2';
+                            card.value = 2;
+                            cards.push_back(card);
+                            break;
+                        case 3:
+                            card.cardLetter = '3';
+                            card.value = 3;
+                            cards.push_back(card);
+                            break;
+                        case 4:
+                            card.cardLetter = '4';
+                            card.value = 4;
+                            cards.push_back(card);
+                            break;
+                        case 5:
+                            card.cardLetter = '5';
+                            card.value = 5;
+                            cards.push_back(card);
+                            break;
+                        case 6:
+                            card.cardLetter = '6';
+                            card.value = 6;
+                            cards.push_back(card);
+                            break;
+                        case 7:
+                            card.cardLetter = '7';
+                            card.value = 7;
+                            cards.push_back(card);
+                            break;
+                        case 8:
+                            card.cardLetter = '8';
+                            card.value = 8;
+                            cards.push_back(card);
+                            break;
+                        case 9:
+                            card.cardLetter = '9';
+                            card.value = 9;
+                            cards.push_back(card);
+                            break;
+                        case 10:
+                            card.cardLetter = 'X';
+                            card.value = 10;
+                            cards.push_back(card);
+                            break;
+                        case 11:
+                            card.cardLetter = 'J';
+                            card.value = 10;
+                            cards.push_back(card);
+                            break;
+                        case 12:
+                            card.cardLetter = 'Q';
+                            card.value = 10;
+                            cards.push_back(card);
+                            break;
+                        case 13:
+                            card.cardLetter = 'K';
+                            card.value = 10;
+                            cards.push_back(card);
+                            break;
+                    }
+                }
+            }
+        }
+        
+        void Shuffle(){
+            // loop to shuffle cards
+            for (int i = cards.size() - 1; i >= 0; i--){
+                int j = rand() % (i + 1);
+                swap(cards[i], cards[j]);
+            }
+        }
+        
+        // print the letter of cards in deck
+        void PrintCards(){
+            if (cards.empty()) return;
+            for (int i = 0; i < cards.size(); i++){
+                cout << cards[i].cardLetter << endl;
+            }
+        }
+        
+        void Deal(){
+            // give out cards
+            cout << "It worked!";
+        }
+};
+
+class Hand{
+    
+    int handSum;
+    // dynamic arrays for splits
+    vector<Card> cardsInHand;
+    vector<Card> cardsInHand2;
+    vector<Card> cardsInHand3;
+    
+    public:
+        Hand(){
+            // initialize hand to 0
+            handSum = 0;
+        }
+        
+        void DisplayHand(){
+            if (cardsInHand.empty()) return;
+            for (int i = 0; i < cardsInHand.size(); i++){
+                cout << cardsInHand[i].cardLetter << " ";
+            }
+        }
+        
+        void HitMe(Deck& deck){
+            // add card to cards in hand
+            deck.Deal();
+        }
+        
+        void Stay(){
+            // pass turn until hand finishes
+        }
+        
+        void Split(){
+            // take two cards and turn it into two seperate hands
+        }
+};
+
+int main() {
+    
+    Deck deck1(false);
+    Hand playerHand;
+    playerHand.HitMe(deck1);
+
+    return 0;
+}
