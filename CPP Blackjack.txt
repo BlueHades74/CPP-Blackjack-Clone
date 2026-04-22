@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ class Deck{
             if (!isDiscardDeck){
                 // constructor to instantly make the cards
                 CreateDeck();
+                Shuffle();
             }
         }
         
@@ -101,7 +103,13 @@ class Deck{
         }
         
         void Shuffle(){
+            srand(time(NULL));
             // loop to shuffle cards
+            for (int i = cards.size() - 1; i >= 0; i--){
+                int j = rand() % (i + 1);
+                swap(cards[i], cards[j]);
+            }
+            // second time for fun
             for (int i = cards.size() - 1; i >= 0; i--){
                 int j = rand() % (i + 1);
                 swap(cards[i], cards[j]);
@@ -116,36 +124,64 @@ class Deck{
             }
         }
         
-        void Deal(){
+        int getSizeOfDeck(){
+            return cards.size();
+        }
+        
+        Card Deal(){
             // give out cards
-            cout << "It worked!";
+            Card toDeal;
+            toDeal = cards.back();
+            cards.pop_back();
+            return toDeal;
         }
 };
 
 class Hand{
     
+    // int for total value of hand
     int handSum;
+    bool isHouse = false;
+    bool isHouseStartingHand = false;
     // dynamic arrays for splits
     vector<Card> cardsInHand;
     vector<Card> cardsInHand2;
     vector<Card> cardsInHand3;
     
     public:
-        Hand(){
+        Hand(bool isTheHouse){
             // initialize hand to 0
             handSum = 0;
+            isHouse = isTheHouse;
+            isHouseStartingHand = isTheHouse;
         }
         
         void DisplayHand(){
             if (cardsInHand.empty()) return;
+            if (isHouseStartingHand) {
+                cout << cardsInHand[0].cardLetter << " ?";
+                return;
+            }
             for (int i = 0; i < cardsInHand.size(); i++){
                 cout << cardsInHand[i].cardLetter << " ";
             }
         }
         
-        void HitMe(Deck& deck){
+        void HitMe(Deck &deck){
+            // need to add later to grab from other deck
+            if (deck.getSizeOfDeck() == 0) return;
             // add card to cards in hand
-            deck.Deal();
+            cardsInHand.push_back(deck.Deal());
+            if (isHouseStartingHand){
+                handSum = cardsInHand[0].value;
+                return;
+            }
+            // reset value of hand
+            handSum = 0;
+            // calculate value in hand
+            for (int i = 0; i < cardsInHand.size(); i++){
+                handSum += cardsInHand[i].value;
+            }
         }
         
         void Stay(){
@@ -153,15 +189,43 @@ class Hand{
         }
         
         void Split(){
-            // take two cards and turn it into two seperate hands
+            // take two of the same card and turn it into two seperate hands
+        }
+        
+        int getHandSum(){
+            return handSum;
         }
 };
 
+void ShowTable(Hand &playerHand, Hand &houseHand){
+    cout << setw(17) << "House: " << houseHand.getHandSum() << endl;
+    cout << right << setw(30) << setfill('#');
+    cout << "#";
+    cout << "\n";
+    cout << right << setw(15) << setfill(' ');
+    houseHand.DisplayHand();
+    cout << "\n\n\n";
+    cout << right << setw(15) << setfill(' ');
+    playerHand.DisplayHand();
+    cout << "\n";
+    cout << right << setw(30) << setfill('#');
+    cout << "#" << endl;
+    cout << setw(18) << setfill(' ');
+    cout << "Player: " << playerHand.getHandSum() << endl;
+}
+
 int main() {
-    
+    // not the discard deck
     Deck deck1(false);
-    Hand playerHand;
+    // not the house hand
+    Hand playerHand(false);
+    // is the house hand
+    Hand houseHand(true);
     playerHand.HitMe(deck1);
+    houseHand.HitMe(deck1);
+    playerHand.HitMe(deck1);
+    houseHand.HitMe(deck1);
+    ShowTable(playerHand, houseHand);
 
     return 0;
 }
