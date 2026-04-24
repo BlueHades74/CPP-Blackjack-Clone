@@ -199,33 +199,103 @@ class Hand{
 
 void ShowTable(Hand &playerHand, Hand &houseHand){
     cout << setw(17) << "House: " << houseHand.getHandSum() << endl;
-    cout << right << setw(30) << setfill('#');
+    cout << setw(30) << setfill('#');
     cout << "#";
     cout << "\n";
-    cout << right << setw(15) << setfill(' ');
+    cout << setw(13) << setfill(' ');
     houseHand.DisplayHand();
     cout << "\n\n\n";
-    cout << right << setw(15) << setfill(' ');
+    cout << setw(13) << setfill(' ');
     playerHand.DisplayHand();
     cout << "\n";
-    cout << right << setw(30) << setfill('#');
+    cout << setw(30) << setfill('#');
     cout << "#" << endl;
     cout << setw(18) << setfill(' ');
     cout << "Player: " << playerHand.getHandSum() << endl;
 }
 
+bool CheckForWin(Hand playerHand, Hand houseHand){
+    if (playerHand.getHandSum() < 21 && playerHand.getHandSum() > houseHand.getHandSum()){
+        cout << "YOU WIN!!!\n\n";
+        return false;
+    }
+    else if (playerHand.getHandSum() > 21){
+        cout << "You lose.\n\n";
+        return false;
+    }
+    else if (houseHand.getHandSum() > 21){
+        cout << "YOU WIN!!!\n\n";
+        return false;
+    }
+    return true;
+}
+
 int main() {
+    // loop flag
+    bool running;
+    bool playerContinue = true;
+    // input command
+    char com;
+    char playerContinueAns;
     // not the discard deck
     Deck deck1(false);
+    // discard deck
+    Deck deck2(true);
     // not the house hand
     Hand playerHand(false);
     // is the house hand
     Hand houseHand(true);
+    // starting hands
     playerHand.HitMe(deck1);
     houseHand.HitMe(deck1);
     playerHand.HitMe(deck1);
     houseHand.HitMe(deck1);
+    
     ShowTable(playerHand, houseHand);
+    
+    while (playerContinue){
+        while (running){
+            cout << "\n\n";
+            
+            cout << "Please enter a move (h - hit, s - stay, p - split): ";
+            cin >> com;
+            
+            switch (com){
+                case 'h':
+                    // need to check if deck 1 is empty
+                    if (!deck1.empty()){
+                        playerHand.HitMe(deck1);
+                    } 
+                    else {
+                        playerHand.HitMe(deck2);
+                    }
+                    break;
+                case 's':
+                    playerHand.Stay();
+                    break;
+                case 'p':
+                    playerHand.Split();
+                    break;
+                default:
+                    cout << "\nProper input not detected.\n\n";
+            }
+            ShowTable(playerHand, houseHand);
+            running = CheckForWin(playerHand, houseHand);
+        }
+        
+        cout << "Would you like to play again? (y/n): ";
+        cin >> playerContinueAns;
+        
+        if (playerContinueAns == 'n'){
+            playerContinue = false;
+        }
+        else {
+            running = true;
+            // need to reset hands and add the discard deck
+            ShowTable(playerHand, houseHand);
+        }
+    }
+    
 
     return 0;
 }
