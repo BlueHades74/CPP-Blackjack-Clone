@@ -135,6 +135,14 @@ class Deck{
             cards.pop_back();
             return toDeal;
         }
+        
+        bool CheckIfEmpty(){
+            return cards.empty();
+        }
+        
+        void AddToDiscardDeck(Card card){
+            cards.push_back(card);
+        }
 };
 
 class Hand{
@@ -146,7 +154,6 @@ class Hand{
     // dynamic arrays for splits
     vector<Card> cardsInHand;
     vector<Card> cardsInHand2;
-    vector<Card> cardsInHand3;
     
     public:
         Hand(bool isTheHouse){
@@ -164,6 +171,12 @@ class Hand{
             }
             for (int i = 0; i < cardsInHand.size(); i++){
                 cout << cardsInHand[i].cardLetter << " ";
+            }
+            if (!cardsInHand2.empty()){
+                cout << "  ";
+                for (int i = 0; i < cardsInHand.size(); i++){
+                    cout << cardsInHand2[i].cardLetter << " ";
+                }
             }
         }
         
@@ -184,21 +197,49 @@ class Hand{
             }
         }
         
-        void Stay(){
-            // pass turn until hand finishes
-        }
-        
         void Split(){
-            // take two of the same card and turn it into two seperate hands
+            if (cardsInHand[0].cardLetter == cardsInHand[1].cardLetter){
+                cardsInHand2.push_back(cardsInHand[1]);
+                cardsInHand.pop_back();
+            }
         }
         
-        int getHandSum(){
+        int GetHandSum(){
+            if (!isHouseStartingHand){
+                handSum = 0;
+                for (int i = 0; i < cardsInHand.size(); i++){
+                    handSum += cardsInHand[i].value;
+                }
+            }
             return handSum;
+        }
+        
+        // for printing whole house hand
+        void NotStartingHand(){
+            isHouseStartingHand = false;
+        }
+        
+        // alters variable to hide second card of house
+        void IsStartingHand(){
+            isHouseStartingHand = true;
+        }
+        
+        vector<Card> GetCardsInHand(int hand){
+            if (hand == 1) return cardsInHand;
+            else return cardsInHand2;
+        }
+        
+        // empties hand
+        void ClearHand(){
+            cardsInHand.clear();
+            if (!cardsInHand2.empty()){
+                cardsInHand2.clear();
+            }
         }
 };
 
-void ShowTable(Hand &playerHand, Hand &houseHand){
-    cout << setw(17) << "House: " << houseHand.getHandSum() << endl;
+void ShowTable(Hand &playerHand, Hand &houseHand, int money){
+    cout << setw(17) << "House: " << houseHand.GetHandSum() << endl;
     cout << setw(30) << setfill('#');
     cout << "#";
     cout << "\n";
@@ -211,29 +252,39 @@ void ShowTable(Hand &playerHand, Hand &houseHand){
     cout << setw(30) << setfill('#');
     cout << "#" << endl;
     cout << setw(18) << setfill(' ');
-    cout << "Player: " << playerHand.getHandSum() << endl;
+    cout << "Player: " << playerHand.GetHandSum() << endl;
+    cout << "Money: " << money;
 }
 
-bool CheckForWin(Hand playerHand, Hand houseHand){
-    if (playerHand.getHandSum() < 21 && playerHand.getHandSum() > houseHand.getHandSum()){
-        cout << "YOU WIN!!!\n\n";
-        return false;
-    }
-    else if (playerHand.getHandSum() > 21){
+bool CheckForWin(int playerSum, int houseSum){
+    if (playerSum > 21){
         cout << "You lose.\n\n";
         return false;
     }
-    else if (houseHand.getHandSum() > 21){
+    else if (houseSum > 21){
         cout << "YOU WIN!!!\n\n";
+        return true;
+    }
+    else if (playerSum > houseSum){
+        cout << "YOU WIN!!!\n\n";
+        return true;
+    }
+    else if (houseSum > playerSum){
+        cout << "You lose.\n\n";
         return false;
     }
-    return true;
+    return false;
 }
 
 int main() {
+    int money = 1000;
+    int bet;
     // loop flag
-    bool running;
+    bool running = true;
+    bool playerStay = false;
     bool playerContinue = true;
+    // false = deck1, true = deck2
+    bool deckToGrabFrom = false;
     // input command
     char com;
     char playerContinueAns;
@@ -243,27 +294,45 @@ int main() {
     Deck deck2(true);
     // not the house hand
     Hand playerHand(false);
+    int playerSum;
     // is the house hand
     Hand houseHand(true);
+    int houseSum;
     // starting hands
     playerHand.HitMe(deck1);
     houseHand.HitMe(deck1);
     playerHand.HitMe(deck1);
     houseHand.HitMe(deck1);
     
-    ShowTable(playerHand, houseHand);
+    ShowTable(playerHand, houseHand, money);
     
     while (playerContinue){
-        while (running){
-            cout << "\n\n";
+        
+        cout << endl;
+        cout << "Enter a bet amount: ";
+        cin >> bet;
+        
+        money -= bet;
+        while (true){
+            if (deck1.CheckIfEmpty() == true && deckToGrabFrom == false){
+                // swap to the second deck for grabbing
+                deckToGrabFrom = true;
+                deck2.Shuffle();
+            } 
+            else if (deck2.CheckIfEmpty() == true && deckToGrabFrom == true){
+                // swap back to the first deck for grabbing
+                deckToGrabFrom = false;
+                deck1.Shuffle();
+            }
+            
+            cout << "\n";
             
             cout << "Please enter a move (h - hit, s - stay, p - split): ";
             cin >> com;
             
             switch (com){
                 case 'h':
-                    // need to check if deck 1 is empty
-                    if (!deck1.empty()){
+                    if (deckToGrabFrom == false){
                         playerHand.HitMe(deck1);
                     } 
                     else {
@@ -271,7 +340,9 @@ int main() {
                     }
                     break;
                 case 's':
-                    playerHand.Stay();
+                    playerStay = true;
+                    running = false;
+                    houseHand.NotStartingHand();
                     break;
                 case 'p':
                     playerHand.Split();
@@ -279,10 +350,40 @@ int main() {
                 default:
                     cout << "\nProper input not detected.\n\n";
             }
-            ShowTable(playerHand, houseHand);
-            running = CheckForWin(playerHand, houseHand);
+            
+            playerSum = playerHand.GetHandSum();
+            houseSum = houseHand.GetHandSum();
+            
+            if (playerSum > 21) break;
+            
+            if (playerStay == true) break;
+            else if (running == false) break;
+            
+            ShowTable(playerHand, houseHand, money);
         }
         
+        if (playerStay == true){
+            // loop for house to try to beat player
+            while(houseSum <= playerSum && houseSum != 21){
+                if (deck1.CheckIfEmpty() == false){
+                    houseHand.HitMe(deck1);
+                } 
+                else {
+                    houseHand.HitMe(deck2);
+                }
+                houseSum = houseHand.GetHandSum();
+            }
+        }
+        
+        cout << endl;
+        if (CheckForWin(playerSum, houseSum) == true) {
+            money += (bet * 2);
+        }
+        ShowTable(playerHand, houseHand, money);
+        
+        if (money <= 0) break;
+        
+        cout << endl;
         cout << "Would you like to play again? (y/n): ";
         cin >> playerContinueAns;
         
@@ -291,8 +392,42 @@ int main() {
         }
         else {
             running = true;
-            // need to reset hands and add the discard deck
-            ShowTable(playerHand, houseHand);
+            playerStay = false;
+            houseHand.IsStartingHand();
+            vector<Card> temp = playerHand.GetCardsInHand(1);
+            if (!temp.empty()){
+                // need to reset hands and add to the discard deck
+                for (int i = temp.size() - 1; i >= 0; i--){
+                    deck2.AddToDiscardDeck(temp[i]);
+                }
+            }
+            temp = playerHand.GetCardsInHand(2);
+            if (!temp.empty()){
+                // need to reset hands and add to the discard deck
+                for (int i = temp.size() - 1; i >= 0; i--){
+                    deck2.AddToDiscardDeck(temp[i]);
+                }
+            }
+            playerHand.ClearHand();
+            houseHand.ClearHand();
+            if (deck1.CheckIfEmpty() == false){
+                playerHand.HitMe(deck1);
+                playerHand.HitMe(deck1);
+            } 
+            else {
+                playerHand.HitMe(deck2);
+                playerHand.HitMe(deck2);
+            }
+            
+            if (deck1.CheckIfEmpty() == false){
+                houseHand.HitMe(deck1);
+                houseHand.HitMe(deck1);
+            } 
+            else {
+                houseHand.HitMe(deck2);
+                houseHand.HitMe(deck2);
+            }
+            ShowTable(playerHand, houseHand, money);
         }
     }
     
